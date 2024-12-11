@@ -1,7 +1,7 @@
 // Main widget to handle a custom interactive star-based rating system
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_star_widget/painter/star_border_painter.dart';
-import 'package:flutter_rating_star_widget/painter/star_clipper.dart';
+import 'package:flutter_rating_star_widget/clipper/star_clipper.dart';
 
 class RatingStarWidget extends StatefulWidget {
   final String title; // Title for the rating section
