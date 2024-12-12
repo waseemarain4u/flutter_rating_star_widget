@@ -1,9 +1,8 @@
-// Custom painter to draw the border for the star shape
-import 'package:flutter/material.dart';
-import 'package:flutter_rating_star_widget/clipper/star_clipper.dart';
+import '../export.dart';
 
+// Custom painter to draw the border of the star
 class StarBorderPainter extends CustomPainter {
-  final Color borderColor;
+  final Color borderColor; // Color for the star border
 
   StarBorderPainter({required this.borderColor});
 
@@ -12,10 +11,11 @@ class StarBorderPainter extends CustomPainter {
     final paint = Paint()
       ..color = borderColor
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
+      ..strokeWidth = 2.0; // Border thickness
 
+    // Draw the border using the star shape path
     final path = StarClipper().getClip(size);
-    canvas.drawPath(path, paint); // Draw the star border
+    canvas.drawPath(path, paint);
   }
 
   @override

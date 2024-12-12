@@ -1,101 +1,118 @@
-// Main widget to handle a custom interactive star-based rating system
-import 'package:flutter/material.dart';
-import 'package:flutter_rating_star_widget/painter/star_border_painter.dart';
-import 'package:flutter_rating_star_widget/clipper/star_clipper.dart';
+import 'export.dart';
+
+// RatingStarWidget: A customizable star rating widget that allows users to select a rating interactively.
+// This widget supports customizable styles, titles for stars, and a callback to notify about rating changes.
 
 class RatingStarWidget extends StatefulWidget {
-  final String title; // Title for the rating section
-  final int maxRating; // The maximum number of stars (default is 5)
-  final double initialRating; // The initial pre-selected rating value
-  final Function(double)
-      onRatingSelected; // Callback function for rating updates
+  final int maxRating; // Maximum number of stars displayed (default is 5).
+  final double initialRating; // Initial rating value (default is 0.0).
+  final ValueChanged<double>?
+      onRatingSelected; // Callback triggered when a rating is selected.
+  final double startSize; // Size of each star (default is 30.0).
+  final double space; // Horizontal space between stars (default is 10.0).
+  final TextStyle?
+      titleStyle; // Style for the title text associated with each star (optional).
+  final List<String>?
+      titleList; // Titles for stars corresponding to their ratings (optional).
+  final Color? fillColor; // Fill color for selected stars (default is amber).
+  final Color? borderColor; // Border color for all stars (default is orange).
 
   const RatingStarWidget({
     super.key,
-    required this.title,
     this.maxRating = 5,
     this.initialRating = 0.0,
-    required this.onRatingSelected,
+    this.onRatingSelected,
+    this.startSize = 30,
+    this.space = 10,
+    this.titleStyle,
+    this.titleList,
+    this.fillColor,
+    this.borderColor,
   });
 
   @override
   State<RatingStarWidget> createState() => _RatingStarWidgetState();
 }
 
-// State class for `RatingStarWidget`
 class _RatingStarWidgetState extends State<RatingStarWidget> {
-  late double _currentRating; // Current rating value
+  late double _currentRating; // Current rating value selected by the user.
 
   @override
   void initState() {
     super.initState();
-    _currentRating = widget
-        .initialRating; // Initialize the current rating with the initial provided value
+    _currentRating = widget.initialRating; // Initialize with initial rating.
   }
 
-  // Handles the logic for updating the rating when a star is clicked
+  // Updates the current rating when a star is clicked.
   void _handleRatingUpdate(int index) {
     setState(() {
+      // Toggle behavior: deselect if the same star is clicked again.
       if (_currentRating == index + 1.0) {
-        _currentRating = 0.0; // Reset rating if the same star is clicked
+        _currentRating = 0.0; // Reset to 0 (no rating).
       } else {
-        _currentRating =
-            index + 1.0; // Set the current rating to the clicked star's value
+        _currentRating = index + 1.0; // Update to the clicked star's rating.
       }
     });
-    widget.onRatingSelected(
-        _currentRating); // Notify the parent widget about the updated rating
+    widget.onRatingSelected?.call(_currentRating); // Trigger callback.
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Row(
       mainAxisSize: MainAxisSize.min,
-      children: [
-        // Row containing stars for user interaction
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(
-            widget.maxRating,
-            (index) => GestureDetector(
-              onTap: () => _handleRatingUpdate(index), // Handle star clicks
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Star with filled color based on the current rating
-                  ClipPath(
-                    clipper: StarClipper(),
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      color: index < _currentRating
-                          ? Colors
-                              .amber // Star filled if it is part of the current rating
-                          : Colors.transparent,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(
+        widget.maxRating,
+        (index) => InkWell(
+          // Handle tap only if a callback is provided.
+          onTap: widget.onRatingSelected != null
+              ? () => _handleRatingUpdate(index)
+              : null,
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: widget.space),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Star rendering with selection logic.
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // Background color for selected stars.
+                    ClipPath(
+                      clipper: StarClipper(), // Custom star-shaped clipper.
+                      child: Container(
+                        width: widget.startSize,
+                        height: widget.startSize,
+                        color: index < _currentRating
+                            ? widget.fillColor ?? Colors.amber.shade600
+                            : Colors.transparent,
+                      ),
+                    ),
+                    // Star border for all stars.
+                    CustomPaint(
+                      size: Size(widget.startSize, widget.startSize),
+                      painter: StarBorderPainter(
+                        borderColor:
+                            widget.borderColor ?? Colors.orange.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+                // Optional titles for stars.
+                if ((widget.titleList ?? []).isNotEmpty &&
+                    (widget.titleList?.length ?? 0) == widget.maxRating)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: Text(
+                      widget.titleList?[index] ?? "",
+                      style: widget.titleStyle,
                     ),
                   ),
-                  // Star border drawn using a custom painter
-                  CustomPaint(
-                    size: const Size(40, 40),
-                    painter: StarBorderPainter(
-                      borderColor: Colors.orange, // Define the border color
-                    ),
-                  ),
-                ],
-              ),
+              ],
             ),
           ),
         ),
-        const SizedBox(height: 8.0), // Add spacing below the stars
-        // Display the title and the current rating value
-        Text(
-          '${widget.title}: ${_currentRating.toStringAsFixed(1)}',
-          style: const TextStyle(
-            fontSize: 16.0,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
